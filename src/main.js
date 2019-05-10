@@ -1,7 +1,7 @@
 const nacl = require('./nacl/naclWrappers');
 const address = require('./encoding/address');
 const mnemonic = require('./mnemonic/mnemonic');
-const enconding = require('./encoding/encoding');
+const encoding = require('./encoding/encoding');
 const txnBuilder = require('./transaction');
 const bidBuilder = require('./bid');
 const algod = require('./client/algod');
@@ -82,7 +82,7 @@ function masterDerivationKeyToMnemonic(mdk) {
 /**
  * signTransaction takes an object with the following fields: to, amount, fee per byte, firstRound, lastRound,
  * and note(optional),GenesisID(optional) and a secret key and returns a signed blob
- * @param txn object with the following fields -  to, amount, fee per byte, firstRound, lastRound, and note(optional)
+ * @param txn object with the following fields -  to, amount, fee per byte, firstRound, lastRound, note(optional), GenesisID(optional)
  * @param sk Algorand Secret Key
  * @returns object contains the binary signed transaction and it's txID
  */
@@ -91,7 +91,6 @@ function signTransaction(txn, sk) {
     let key = nacl.keyPairFromSecretKey(sk);
     txn.from = address.encode(key.publicKey);
     let algoTxn = new txnBuilder.Transaction(txn);
-
     return {"txID": algoTxn.txID().toString(), "blob": algoTxn.signTxn(sk)};
 }
 
@@ -114,7 +113,7 @@ function signBid(bid, sk) {
  * @returns Uint8Array binary representation
  */
 function encodeObj(o) {
-    return new Uint8Array(enconding.encode(o));
+    return new Uint8Array(encoding.encode(o));
 }
 
 /**
@@ -123,7 +122,18 @@ function encodeObj(o) {
  * @returns object
  */
 function decodeObj(o) {
-    return enconding.decode(o);
+    return encoding.decode(o);
+}
+
+/**
+ * buildTransaction takes an object with the following fields: from, to, amount, fee per byte, firstRound, lastRound,
+ * and note(optional),GenesisID(optional) and returns an algosdk Transaction object
+ * @param txn object with the following fields - from, to, amount, fee per byte, firstRound, lastRound, note(optional), GenesisID(optional)
+ * @returns object
+ */
+function buildTransaction(txn) {
+    let algoTxn = new txnBuilder.Transaction(txn);
+    return algoTxn
 }
 
 module.exports = {
@@ -138,7 +148,8 @@ module.exports = {
     Algod,
     Kmd,
     mnemonicToMasterDerivationKey,
-    masterDerivationKeyToMnemonic
+    masterDerivationKeyToMnemonic,
+    buildTransaction
 };
 module.exports.ERROR_NOT_TRANSACTION_BUILDER = ERROR_NOT_TRANSACTION_BUILDER;
 module.exports.ERROR_NOT_BID_BUILDER = ERROR_NOT_BID_BUILDER;
